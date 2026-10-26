@@ -1,0 +1,246 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "8bd5ccde-fc11-4941-b158-0d454067f244",
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtMinute": 8
+            }
+          ]
+        }
+      },
+      "id": "9bce099a-2373-465c-99b3-bc03ca63434c",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -496,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "url": ,
+        "options": {}
+      },
+      "id": "e3dde3b0-2968-4800-ba88-22ad9e3056d2",
+      "name": "RSS Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "url": ,
+        "options": {}
+      },
+      "id": "b44f4eb3-afb6-43df-aa40-efd2672caa8b",
+      "name": "RSS Read1",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        208
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "1be793cf-84e1-482d-9051-76cf2ea0befd",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        64,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "id": "00ea674d-8979-4d44-a7da-948969d7c86d",
+      "name": "Limit",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write one engaging tweet, under 240 characters, summarising this tech news story. Use at most one hashtag and end with the link.\n\nTitle: {{ $json.title }}\nSummary: {{ $json.contentSnippet }}\nLink: {{ $json.link }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a social media writer for a tech news account. Write in clear, friendly English."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "1d410b0b-0092-49c5-aed3-e78c7e8971b5",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        608,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "89ccd951-570a-4584-9376-d4bc43f64f17",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        192
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=HELLO FROM N8N {{ $json.text }}",
+        "options": {}
+      },
+      "id": "d960fd0a-0ef3-40b8-8762-b862dee334b5",
+      "name": "Discord",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        976,
+        0
+      ],
+      "webhookId": "287599d4-939c-4ae8-844e-d6c2025ac4f9"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS Read1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0bd2b3c4-3b69-41e4-b8b2-f74b46b7bf55",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "62322ed5de61cc0dfd3beb79d12a353e862db2b38c0c82a833738587af1bf084"
+  },
+  "nodeGroups": [],
+  "id": "oAzEU5eCf4wem4B8",
+  "tags": []
+}
